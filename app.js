@@ -179,14 +179,63 @@ function resetLogoInput() {
   byId("apply-business").disabled = false;
 }
 
+function logoCanvas(width, height, enlarge = false) {
+  const scale = Math.min(enlarge ? Infinity : 1, 640 / width, 240 / height);
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.max(1, Math.ceil(width * scale));
+  canvas.height = Math.max(1, Math.ceil(height * scale));
+  return { canvas, scale };
+}
+
+async function readImageLogo(file) {
+  const url = URL.createObjectURL(file);
+  try {
+    const image = new Image();
+    image.src = url;
+    await image.decode();
+    const { canvas } = logoCanvas(image.naturalWidth, image.naturalHeight);
+    canvas.getContext("2d").drawImage(image, 0, 0, canvas.width, canvas.height);
+    return canvas.toDataURL("image/png");
+  } finally {
+    URL.revokeObjectURL(url);
+  }
+}
+
+async function readPdfLogo(file) {
+  const { getDocument, GlobalWorkerOptions } = await import("./vendor/pdfjs/pdf.min.mjs");
+  GlobalWorkerOptions.workerSrc = new URL("./vendor/pdfjs/pdf.worker.min.mjs", document.baseURI).href;
+  const loadingTask = getDocument({
+    data: new Uint8Array(await file.arrayBuffer()),
+    disableWorkerRendering: true,
+    useWasm: false,
+  });
+  try {
+    const pdf = await loadingTask.promise;
+    const page = await pdf.getPage(1);
+    const { width, height } = page.getViewport({ scale: 1 });
+    const { canvas, scale } = logoCanvas(width, height, true);
+    await page.render({
+      canvas,
+      viewport: page.getViewport({ scale }),
+      background: "#ffffff",
+      annotationMode: 0,
+    }).promise;
+    return canvas.toDataURL("image/png");
+  } finally {
+    await loadingTask.destroy();
+  }
+}
+
 logoInput.addEventListener("change", async () => {
   const file = logoInput.files[0];
   if (!file) return;
   const request = ++logoRequest;
   const error = byId("logo-error");
   error.hidden = true;
-  if (!["image/png", "image/jpeg", "image/webp"].includes(file.type) || file.size > 8 * 1024 * 1024) {
-    error.textContent = "Choose a PNG, JPG, or WebP image up to 8 MB.";
+  const isPdf = file.type === "application/pdf" || /\.pdf$/i.test(file.name);
+  const isImage = ["image/png", "image/jpeg", "image/webp"].includes(file.type) || /\.(png|jpe?g|webp)$/i.test(file.name);
+  if ((!isPdf && !isImage) || file.size > 8 * 1024 * 1024) {
+    error.textContent = "Choose a PNG, JPG, WebP, or PDF file up to 8 MB.";
     error.hidden = false;
     logoInput.value = "";
     byId("apply-business").disabled = false;
@@ -194,27 +243,19 @@ logoInput.addEventListener("change", async () => {
   }
 
   byId("apply-business").disabled = true;
-  const url = URL.createObjectURL(file);
   try {
-    const image = new Image();
-    image.src = url;
-    await image.decode();
+    const logo = await (isPdf ? readPdfLogo(file) : readImageLogo(file));
     if (request !== logoRequest || !businessDialog.open) return;
-
-    const scale = Math.min(1, 640 / image.naturalWidth, 240 / image.naturalHeight);
-    const canvas = document.createElement("canvas");
-    canvas.width = Math.max(1, Math.round(image.naturalWidth * scale));
-    canvas.height = Math.max(1, Math.round(image.naturalHeight * scale));
-    canvas.getContext("2d").drawImage(image, 0, 0, canvas.width, canvas.height);
-    draftLogo = canvas.toDataURL("image/png");
+    draftLogo = logo;
     updateLogoEditor();
   } catch {
     if (request !== logoRequest || !businessDialog.open) return;
-    error.textContent = "This image could not be opened. Choose another logo.";
+    error.textContent = isPdf
+      ? "This PDF could not be opened. Try an unlocked PDF or upload a PNG instead."
+      : "This image could not be opened. Choose another logo.";
     error.hidden = false;
     logoInput.value = "";
   } finally {
-    URL.revokeObjectURL(url);
     if (request === logoRequest) byId("apply-business").disabled = false;
   }
 });
@@ -326,7 +367,7 @@ function startInvoice(example = false) {
   invoice.number.setCustomValidity("");
   invoice.client.setCustomValidity("");
   invoice.number.value = example ? "DEMO-001" : "";
-  invoice.date.value = example ? "2025-04-03" : localDate();
+  invoice.date.value = localDate();
   invoice.currency.value = "MKD";
   invoice.autoVat.checked = false;
   invoice.vat.value = String(defaultVatRate);

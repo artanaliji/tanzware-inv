@@ -1,11 +1,11 @@
 # Invoice Studio
 
-A static invoice editor with a live Macedonian and Albanian A4 preview. The first visit shows fictional details and line items. The site has no build step or external dependencies.
+A static invoice editor with a live Macedonian and Albanian A4 preview. The first visit shows fictional details and line items. The site runs without a build step or runtime CDN dependencies.
 
 ## Use the editor
 
 1. Open `index.html` locally or visit your published GitHub Pages URL.
-2. Select **Edit details** to enter your business details and optionally upload a logo. Select **Save my details in this browser** to reuse your details and logo on future visits.
+2. Select the pencil icon under **Your business** to enter your details and optionally upload a PNG, JPG, WebP, or PDF logo. For a PDF logo, use the published site or a local HTTP server. The first page is converted in your browser. Select **Save my details in this browser** to reuse your details and logo on future visits.
 3. Enter the invoice number, issue date, client, and line items. Choose the currency. The VAT rate starts at 18% and the VAT amount starts at zero. Enter a manual amount or select **Calculate VAT automatically** to calculate it from the subtotal and rate.
 4. Select **Save PDF**, then choose **Save as PDF** in the browser print dialog. Use A4 portrait and turn off browser headers and footers if they are enabled.
 5. Select **New invoice** to clear the invoice fields and keep your business details.
@@ -19,3 +19,5 @@ Open **Invoice data** and select **Export data** to download a JSON file contain
 ## Publish on GitHub Pages
 
 Commit and push the repository files to `main`. In **Settings → Pages**, select **Deploy from a branch**, choose **main** and **/(root)**, and save. Share the URL shown in Pages settings after deployment. [GitHub Pages publishing documentation](https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site)
+
+PDF logos use [Mozilla PDF.js](https://github.com/mozilla/pdf.js) 6.5.438, distributed under the license in `vendor/pdfjs/LICENSE`. The renderer loads only when a PDF is selected.

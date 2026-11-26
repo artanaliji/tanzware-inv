@@ -6,7 +6,7 @@
   <meta name="color-scheme" content="light">
   <title>Invoice Studio</title>
   <link rel="stylesheet" href="./styles.css?v=7">
-  <script src="./app.js?v=6" defer></script>
+  <script src="./app.js?v=8" defer></script>
 </head>
 <body>
   <header class="app-header">
@@ -166,8 +166,8 @@
         <label>Account number<input name="account" maxlength="55"></label>
         <label>Email<input name="email" type="email" maxlength="100"></label>
         <label>Phone<input name="phone" type="tel" maxlength="45"></label>
-        <label class="full">Business logo <input type="file" name="logo" accept="image/png,image/jpeg,image/webp" aria-describedby="logo-hint"></label>
-        <p class="full hint" id="logo-hint">Optional. PNG, JPG, or WebP up to 8 MB.</p>
+        <label class="full">Business logo <input type="file" name="logo" accept="image/png,image/jpeg,image/webp,application/pdf,.pdf" aria-describedby="logo-hint"></label>
+        <p class="full hint" id="logo-hint">Optional. PNG, JPG, WebP, or PDF up to 8 MB. For PDFs, the first page becomes the logo.</p>
         <div class="full logo-preview" id="logo-preview" hidden>
           <img id="logo-thumbnail" alt="Selected business logo">
           <button class="button secondary small" id="remove-logo" type="button">Remove logo</button>
