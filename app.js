@@ -30,6 +30,7 @@ const demoItems = [
   { description: "Подготовка на графички материјали\nPërgatitje e materialeve grafike", quantity: "2", price: "3500" },
 ];
 const emptyItem = { description: "", quantity: "1", price: "" };
+const defaultVatRate = 18;
 const currencyUnits = { MKD: "ден", EUR: "EUR", USD: "USD", GBP: "GBP", ALL: "ALL" };
 const integerFormat = new Intl.NumberFormat("en-GB");
 
@@ -143,11 +144,11 @@ function scaledValue(input, scale) {
   return BigInt(Math.round(input.valueAsNumber * scale));
 }
 
-function money(cents, currency) {
+function money(cents, currency, unit = currencyUnits[currency]) {
   const whole = integerFormat.format(cents / 100n);
   const fraction = cents % 100n;
   const decimal = fraction || currency !== "MKD" ? "." + String(fraction).padStart(2, "0") : "";
-  return whole + decimal + " " + currencyUnits[currency];
+  return whole + decimal + " " + unit;
 }
 
 function addItem(values = emptyItem) {
@@ -199,9 +200,9 @@ function renderInvoice() {
   byId("paper-items").replaceChildren(rows);
   setText("editor-total", total);
   setText("editor-currency", currency);
-  setText("paper-vat-rate", String(Number(vatRate) / 100));
+  setText("paper-vat-rate", String(calculateVat ? Number(vatRate) / 100 : defaultVatRate));
   setText("paper-subtotal", money(subtotal, currency));
-  setText("paper-vat", money(vat, currency));
+  setText("paper-vat", money(vat, currency, currency));
   setText("paper-total", total);
 
   setText("active-business", name || "Add your business");
@@ -231,7 +232,7 @@ function startInvoice(example = false) {
   invoice.date.value = example ? "2025-04-03" : localDate();
   invoice.currency.value = "MKD";
   invoice.autoVat.checked = false;
-  invoice.vat.value = "18";
+  invoice.vat.value = String(defaultVatRate);
   invoice.client.value = example ? "Juniper Works" : "";
   invoice.clientAddress.value = example ? "48 Sample Avenue\n1200 Tetovo, North Macedonia" : "";
   items.replaceChildren();

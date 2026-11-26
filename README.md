@@ -6,7 +6,7 @@ A static invoice editor with a live Macedonian and Albanian A4 preview. The firs
 
 1. Open `index.html` locally or visit your published GitHub Pages URL.
 2. Select **Edit details** to enter your business details and optionally upload a logo. Select **Save my details in this browser** to reuse your details and logo on future visits.
-3. Enter the invoice number, issue date, client, and line items. Choose the currency. VAT defaults to 0%. To add VAT, select **Calculate VAT automatically** and set the rate.
+3. Enter the invoice number, issue date, client, and line items. Choose the currency. By default, the invoice shows the 18% VAT label with a zero VAT amount. To add VAT, select **Calculate VAT automatically** and set the rate.
 4. Select **Save PDF**, then choose **Save as PDF** in the browser print dialog. Use A4 portrait and turn off browser headers and footers if they are enabled.
 5. Select **New invoice** to clear the invoice fields and keep your business details.
 
