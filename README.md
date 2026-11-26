@@ -12,7 +12,9 @@ A static invoice editor with a live Macedonian and Albanian A4 preview. The firs
 
 Each browser profile keeps its own business details. On a shared browser profile, clear the **Save my details in this browser** checkbox and apply the change to remove the stored details. Client information and line items exist only on the open page.
 
-Use **Export data** to download a JSON file containing the current invoice, business details, logo, and VAT settings. In another browser, select **Import data** and choose that file. To keep the imported business details for future visits, save them under **Edit details**. Keep the JSON file with your invoice records because it contains the information you entered.
+Select **Edit labels** in the preview to change the text printed on the invoice. Leave a label blank to hide its text while keeping its space. Long labels wrap within their columns. Use `{rate}` in the VAT label to insert the percentage number, and select **Save labels in this browser** to keep your changes for future visits.
+
+Use **Export data** to download a JSON file containing the current invoice, business details, logo, VAT settings, and custom labels. In another browser, select **Import data** and choose that file. To keep the imported business details for future visits, save them under **Edit details**. Keep the JSON file with your invoice records because it contains the information you entered.
 
 ## Publish on GitHub Pages
 

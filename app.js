@@ -10,6 +10,15 @@ const logoInput = businessFields.logo;
 const paperLogo = byId("paper-logo");
 const items = byId("item-list");
 const profileKey = "invoice-studio.business.v1";
+const labelsKey = "invoice-studio.labels.v1";
+const labelLimit = 100;
+const labelsDialog = byId("labels-dialog");
+const labelsForm = byId("labels-form");
+const labelSlots = Array.from(document.querySelectorAll("[data-invoice-label]"), (element) => {
+  const nodes = Array.from(element.childNodes, (node) => node.cloneNode(true));
+  const defaultText = nodes.map((node) => node.nodeName === "BR" ? "\n" : node.textContent).join("");
+  return { element, nodes, defaultText, key: element.dataset.invoiceLabel };
+});
 const businessKeys = ["name", "address", "bank", "account", "email", "phone"];
 const invoiceKeys = ["number", "date", "currency", "vat", "client", "clientAddress"];
 const itemKeys = ["description", "quantity", "price"];
@@ -40,6 +49,91 @@ let showingDemo = !savedBusiness;
 let dirty = false;
 let draftLogo = "";
 let logoRequest = 0;
+let savedLabels = readLabels();
+let customLabels = savedLabels ?? {};
+
+function readLabels() {
+  try {
+    return normalizeLabels(JSON.parse(localStorage.getItem(labelsKey)));
+  } catch {
+    return null;
+  }
+}
+
+function normalizeLabels(labels) {
+  if (!labels || typeof labels !== "object" || Array.isArray(labels)) return null;
+  const overrides = {};
+  for (const { key, defaultText } of labelSlots) {
+    if (!Object.hasOwn(labels, key)) continue;
+    const value = labels[key];
+    if (typeof value !== "string" || value.length > labelLimit) return null;
+    if (value !== defaultText) overrides[key] = value;
+  }
+  return overrides;
+}
+
+function fillLabelEditor(overrides) {
+  for (const { key, defaultText } of labelSlots) {
+    labelsForm.elements[key].value = overrides[key] ?? defaultText;
+  }
+}
+
+for (const { element, key } of labelSlots) {
+  const label = document.createElement("label");
+  const field = document.createElement("textarea");
+  label.textContent = element.dataset.caption;
+  field.name = key;
+  field.rows = 2;
+  field.maxLength = labelLimit;
+  label.append(field);
+  byId("label-fields").append(label);
+}
+
+byId("edit-labels").addEventListener("click", () => {
+  fillLabelEditor(customLabels);
+  labelsForm.elements.remember.checked = customLabels === savedLabels;
+  byId("labels-storage-error").hidden = true;
+  labelsDialog.showModal();
+});
+
+byId("close-labels").addEventListener("click", () => labelsDialog.close());
+byId("reset-labels").addEventListener("click", () => fillLabelEditor({}));
+labelsForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+  const wasSaved = customLabels === savedLabels;
+  customLabels = normalizeLabels(Object.fromEntries(
+    labelSlots.map(({ key }) => [key, labelsForm.elements[key].value.trim()]),
+  )) ?? {};
+  renderInvoice();
+  try {
+    if (labelsForm.elements.remember.checked) {
+      localStorage.setItem(labelsKey, JSON.stringify(customLabels));
+      savedLabels = customLabels;
+    } else if (wasSaved) {
+      localStorage.removeItem(labelsKey);
+      savedLabels = null;
+    }
+  } catch {
+    byId("labels-storage-error").hidden = false;
+    return;
+  }
+  labelsDialog.close();
+});
+
+function renderLabels(vatRate) {
+  for (const { element, nodes, key } of labelSlots) {
+    if (Object.hasOwn(customLabels, key)) {
+      const value = customLabels[key];
+      element.textContent = key === "vat" ? value.replaceAll("{rate}", vatRate) : value;
+      element.setAttribute("data-custom-label", "");
+    } else if (element.hasAttribute("data-custom-label")) {
+      element.replaceChildren(...nodes.map((node) => node.cloneNode(true)));
+      element.removeAttribute("data-custom-label");
+    }
+  }
+  const defaultVatLabel = byId("paper-vat-rate");
+  if (defaultVatLabel) defaultVatLabel.textContent = vatRate;
+}
 
 function supportedLogo(logo) {
   return typeof logo === "string" && (
@@ -200,7 +294,7 @@ function renderInvoice() {
   byId("paper-items").replaceChildren(rows);
   setText("editor-total", total);
   setText("editor-currency", currency);
-  setText("paper-vat-rate", String(calculateVat ? Number(vatRate) / 100 : defaultVatRate));
+  renderLabels(String(calculateVat ? Number(vatRate) / 100 : defaultVatRate));
   setText("paper-subtotal", money(subtotal, currency));
   setText("paper-vat", money(vat, currency, currency));
   setText("paper-total", total);
@@ -276,6 +370,7 @@ byId("export-data").addEventListener("click", () => {
     format: transferFormat,
     version: 1,
     business,
+    labels: customLabels,
     invoice: { ...fieldValues(invoice, invoiceKeys), autoVat: invoice.autoVat.checked },
     items: Array.from(items.children, (item) => Object.fromEntries(
       itemKeys.map((key) => [key, item.querySelector('[name="' + key + '"]').value]),
@@ -307,7 +402,9 @@ importInput.addEventListener("change", async () => {
   try {
     if (file.size > transferLimit) throw new Error("This file is too large to import.");
     const data = JSON.parse(await file.text());
+    const importedLabels = data?.labels === undefined ? {} : normalizeLabels(data.labels);
     if (data?.format !== transferFormat || data.version !== 1 ||
+        !importedLabels ||
         !matchesFields(data.business, businessKeys) || !supportedLogo(data.business.logo) ||
         !matchesFields(data.invoice, invoiceKeys) || typeof data.invoice.autoVat !== "boolean" ||
         !Object.hasOwn(currencyUnits, data.invoice.currency) ||
@@ -322,6 +419,7 @@ importInput.addEventListener("change", async () => {
     if (dirty && !window.confirm("Replace the current invoice with the imported invoice?")) return;
 
     business = Object.fromEntries([...businessKeys, "logo"].map((key) => [key, data.business[key]]));
+    customLabels = importedLabels;
     showingDemo = false;
     invoiceKeys.forEach((key) => {
       invoice[key].value = data.invoice[key];

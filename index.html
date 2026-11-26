@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light">
   <title>Invoice Studio</title>
-  <link rel="stylesheet" href="./styles.css?v=3">
-  <script src="./app.js?v=4" defer></script>
+  <link rel="stylesheet" href="./styles.css?v=5">
+  <script src="./app.js?v=5" defer></script>
 </head>
 <body>
   <header class="app-header">
@@ -87,7 +87,10 @@
       <section class="preview" aria-labelledby="preview-heading">
         <div class="preview-header">
           <h2 id="preview-heading"><span class="live-dot" aria-hidden="true"></span> Invoice preview</h2>
-          <span>A4 · Portrait</span>
+          <div class="preview-actions">
+            <span>A4 · Portrait</span>
+            <button class="button secondary small" id="edit-labels" type="button">Edit labels</button>
+          </div>
         </div>
         <div class="preview-stage">
           <div class="paper-frame">
@@ -98,40 +101,40 @@
                 <strong id="paper-business"></strong>
                 <div class="paper-address" id="paper-business-address"></div>
               </div>
-              <h2 class="paper-title"><span lang="mk">Фактура</span><span aria-hidden="true">/</span><span lang="sq">Faturë</span></h2>
+              <h2 class="paper-title" data-invoice-label="title" data-caption="Invoice title"><span lang="mk">Фактура</span>/<span lang="sq">Faturë</span></h2>
               <div class="paper-meta">
-                <div><strong><span lang="mk">Бр. на фактура</span>/<span lang="sq">Nr. i faturës</span></strong><span id="paper-number"></span></div>
-                <div><strong><span lang="mk">Датум</span>/<span lang="sq">Data</span></strong><span id="paper-date"></span></div>
+                <div><strong data-invoice-label="number" data-caption="Invoice number"><span lang="mk">Бр. на фактура</span>/<span lang="sq">Nr. i faturës</span></strong><span id="paper-number"></span></div>
+                <div><strong data-invoice-label="date" data-caption="Issue date"><span lang="mk">Датум</span>/<span lang="sq">Data</span></strong><span id="paper-date"></span></div>
               </div>
               <div class="paper-client">
-                <strong><span lang="mk">ЗА</span>/<span lang="sq">PËR</span></strong>
+                <strong data-invoice-label="client" data-caption="Bill to"><span lang="mk">ЗА</span>/<span lang="sq">PËR</span></strong>
                 <div><strong id="paper-client"></strong><div class="paper-address" id="paper-client-address"></div></div>
               </div>
               <table class="paper-items" aria-label="Line items">
                 <colgroup><col class="qty-col"><col class="desc-col"><col class="price-col"><col class="price-col"></colgroup>
                 <thead><tr>
-                  <th scope="col"><span lang="mk">Количина</span><br><span lang="sq">Sasia</span></th>
-                  <th scope="col"><span lang="mk">Опис</span><br><span lang="sq">Përshkrimi</span></th>
-                  <th scope="col"><span lang="mk">Цена</span><br><span lang="sq">Çmimi</span></th>
-                  <th scope="col"><span lang="mk">Вкупно</span><br><span lang="sq">Totali</span></th>
+                  <th scope="col"><span data-invoice-label="quantity" data-caption="Quantity column"><span lang="mk">Количина</span><br><span lang="sq">Sasia</span></span></th>
+                  <th scope="col"><span data-invoice-label="description" data-caption="Description column"><span lang="mk">Опис</span><br><span lang="sq">Përshkrimi</span></span></th>
+                  <th scope="col"><span data-invoice-label="price" data-caption="Unit price column"><span lang="mk">Цена</span><br><span lang="sq">Çmimi</span></span></th>
+                  <th scope="col"><span data-invoice-label="amount" data-caption="Line total column"><span lang="mk">Вкупно</span><br><span lang="sq">Totali</span></span></th>
                 </tr></thead>
                 <tbody id="paper-items"></tbody>
               </table>
               <div class="paper-summary">
                 <div class="paper-bank">
-                  <div id="bank-line"><strong><span lang="mk">Банка</span>/<span lang="sq">Banka</span></strong><div id="paper-bank"></div></div>
-                  <div id="account-line"><strong><span lang="mk">Сметка</span>/<span lang="sq">Llogaria</span></strong><div id="paper-account"></div></div>
+                  <div id="bank-line"><strong data-invoice-label="bank" data-caption="Bank"><span lang="mk">Банка</span>/<span lang="sq">Banka</span></strong><div id="paper-bank"></div></div>
+                  <div id="account-line"><strong data-invoice-label="account" data-caption="Account number"><span lang="mk">Сметка</span>/<span lang="sq">Llogaria</span></strong><div id="paper-account"></div></div>
                 </div>
                 <dl class="paper-totals">
-                  <div><dt><span lang="mk">Вкупно без ДДВ</span>/<span lang="sq">Totali pa TVSH</span></dt><dd id="paper-subtotal"></dd></div>
-                  <div><dt><span lang="mk">ДДВ</span>/<span lang="sq">TVSH</span> (<span id="paper-vat-rate"></span>%)</dt><dd id="paper-vat"></dd></div>
-                  <div class="paper-grand-total"><dt><span lang="mk">Вкупно</span>/<span lang="sq">Totali</span></dt><dd id="paper-total"></dd></div>
+                  <div><dt data-invoice-label="subtotal" data-caption="Subtotal"><span lang="mk">Вкупно без ДДВ</span>/<span lang="sq">Totali pa TVSH</span></dt><dd id="paper-subtotal"></dd></div>
+                  <div><dt data-invoice-label="vat" data-caption="VAT"><span lang="mk">ДДВ</span>/<span lang="sq">TVSH</span> (<span id="paper-vat-rate">{rate}</span>%)</dt><dd id="paper-vat"></dd></div>
+                  <div class="paper-grand-total"><dt data-invoice-label="total" data-caption="Grand total"><span lang="mk">Вкупно</span>/<span lang="sq">Totali</span></dt><dd id="paper-total"></dd></div>
                 </dl>
               </div>
               <footer class="paper-footer">
                 <div class="signatures">
-                  <div><span lang="mk">Примил</span>/<span lang="sq">Pranoi</span></div>
-                  <div><span lang="mk">Овластено лице</span>/<br><span lang="sq">Personi i autorizuar</span></div>
+                  <div><span data-invoice-label="recipient" data-caption="Recipient signature"><span lang="mk">Примил</span>/<span lang="sq">Pranoi</span></span></div>
+                  <div><span data-invoice-label="signatory" data-caption="Authorized signature"><span lang="mk">Овластено лице</span>/<br><span lang="sq">Personi i autorizuar</span></span></div>
                 </div>
                 <p id="paper-contact"></p>
               </footer>
@@ -169,6 +172,23 @@
       <div class="dialog-actions">
         <button class="button secondary" id="cancel-business" type="button">Cancel</button>
         <button class="button primary" id="apply-business" type="submit">Apply details</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="labels-dialog" aria-labelledby="labels-title" aria-describedby="labels-hint">
+    <form id="labels-form" autocomplete="off">
+      <div class="dialog-heading">
+        <h2 id="labels-title">Invoice labels</h2>
+        <button class="button icon-button" type="button" id="close-labels" aria-label="Close invoice labels">×</button>
+      </div>
+      <p class="hint" id="labels-hint">Leave a label blank to hide its text and keep its space. Use <code>{rate}</code> in the VAT label to show the current percentage number.</p>
+      <div class="field-grid" id="label-fields"></div>
+      <label class="checkbox"><input type="checkbox" name="remember"> Save labels in this browser</label>
+      <p id="labels-storage-error" class="error" role="alert" hidden>Browser storage is unavailable. You can export these labels with your invoice data.</p>
+      <div class="dialog-actions">
+        <button class="button secondary" id="reset-labels" type="button">Restore defaults</button>
+        <button class="button primary" type="submit">Apply labels</button>
       </div>
     </form>
   </dialog>
