@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light">
   <title>Invoice Studio</title>
-  <link rel="stylesheet" href="./styles.css">
-  <script src="./app.js" defer></script>
+  <link rel="stylesheet" href="./styles.css?v=2">
+  <script src="./app.js?v=2" defer></script>
 </head>
 <body>
   <header class="app-header">
@@ -82,6 +82,7 @@
           <div class="paper-frame">
             <article class="paper" aria-label="Bilingual invoice">
               <div class="paper-issuer">
+                <img class="paper-logo" id="paper-logo" alt="" hidden>
                 <span class="paper-monogram" id="paper-monogram" aria-hidden="true"></span>
                 <strong id="paper-business"></strong>
                 <div class="paper-address" id="paper-business-address"></div>
@@ -143,13 +144,20 @@
         <label>Account number<input name="account" maxlength="55"></label>
         <label>Email<input name="email" type="email" maxlength="100"></label>
         <label>Phone<input name="phone" type="tel" maxlength="45"></label>
+        <label class="full">Business logo <input type="file" name="logo" accept="image/png,image/jpeg,image/webp" aria-describedby="logo-hint"></label>
+        <p class="full hint" id="logo-hint">Optional. PNG, JPG, or WebP up to 8 MB.</p>
+        <div class="full logo-preview" id="logo-preview" hidden>
+          <img id="logo-thumbnail" alt="Selected business logo">
+          <button class="button secondary small" id="remove-logo" type="button">Remove logo</button>
+        </div>
+        <p class="full error" id="logo-error" role="alert" hidden></p>
       </div>
       <label class="checkbox"><input type="checkbox" name="remember"> Save my details in this browser</label>
       <p class="hint">Your colleagues can save their own details on their devices.</p>
       <p id="storage-error" class="error" role="alert" hidden>Browser storage is unavailable. You can still use these details for this session.</p>
       <div class="dialog-actions">
         <button class="button secondary" id="cancel-business" type="button">Cancel</button>
-        <button class="button primary" type="submit">Apply details</button>
+        <button class="button primary" id="apply-business" type="submit">Apply details</button>
       </div>
     </form>
   </dialog>

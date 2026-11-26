@@ -6,10 +6,12 @@ const invoice = invoiceForm.elements;
 const businessDialog = byId("business-dialog");
 const businessForm = byId("business-form");
 const businessFields = businessForm.elements;
+const logoInput = businessFields.logo;
+const paperLogo = byId("paper-logo");
 const items = byId("item-list");
 const profileKey = "invoice-studio.business.v1";
 const businessKeys = ["name", "address", "bank", "account", "email", "phone"];
-const emptyBusiness = Object.fromEntries(businessKeys.map((key) => [key, ""]));
+const emptyBusiness = { ...Object.fromEntries(businessKeys.map((key) => [key, ""])), logo: "" };
 const demoBusiness = {
   name: "Aster Design Studio",
   address: "12 Example Lane\n1000 Skopje, North Macedonia",
@@ -17,6 +19,7 @@ const demoBusiness = {
   account: "0000 0000 0000 0000",
   email: "hello@aster.example",
   phone: "+1 202 555 0147",
+  logo: "./assets/aster-logo.png",
 };
 const demoItems = [
   { description: "Дизајн на веб-страница\nDizajn i faqes së internetit", quantity: "1", price: "24000" },
@@ -30,14 +33,18 @@ let savedBusiness = readBusiness();
 let business = savedBusiness ?? { ...demoBusiness };
 let showingDemo = !savedBusiness;
 let dirty = false;
+let draftLogo = "";
+let logoRequest = 0;
 
 function readBusiness() {
   try {
     const profile = JSON.parse(localStorage.getItem(profileKey));
     if (profile && typeof profile.name === "string" && profile.name.trim()) {
-      return Object.fromEntries(businessKeys.map((key) => [
+      const fields = Object.fromEntries(businessKeys.map((key) => [
         key, typeof profile[key] === "string" ? profile[key] : "",
       ]));
+      const logo = typeof profile.logo === "string" && profile.logo.startsWith("data:image/png;base64,") ? profile.logo : "";
+      return { ...fields, logo };
     }
   } catch {
     // An invalid or unavailable stored profile should leave the editor usable.
@@ -48,6 +55,71 @@ function readBusiness() {
 function setText(id, value) {
   byId(id).textContent = value;
 }
+
+function setLogo(image, source) {
+  if (source && image.getAttribute("src") !== source) image.src = source;
+  if (!source) image.removeAttribute("src");
+  image.hidden = !source;
+}
+
+function updateLogoEditor() {
+  setLogo(byId("logo-thumbnail"), draftLogo);
+  byId("logo-preview").hidden = !draftLogo;
+}
+
+function resetLogoInput() {
+  logoRequest++;
+  logoInput.value = "";
+  byId("logo-error").hidden = true;
+  byId("apply-business").disabled = false;
+}
+
+logoInput.addEventListener("change", async () => {
+  const file = logoInput.files[0];
+  if (!file) return;
+  const request = ++logoRequest;
+  const error = byId("logo-error");
+  error.hidden = true;
+  if (!["image/png", "image/jpeg", "image/webp"].includes(file.type) || file.size > 8 * 1024 * 1024) {
+    error.textContent = "Choose a PNG, JPG, or WebP image up to 8 MB.";
+    error.hidden = false;
+    logoInput.value = "";
+    byId("apply-business").disabled = false;
+    return;
+  }
+
+  byId("apply-business").disabled = true;
+  const url = URL.createObjectURL(file);
+  try {
+    const image = new Image();
+    image.src = url;
+    await image.decode();
+    if (request !== logoRequest || !businessDialog.open) return;
+
+    const scale = Math.min(1, 640 / image.naturalWidth, 240 / image.naturalHeight);
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.max(1, Math.round(image.naturalWidth * scale));
+    canvas.height = Math.max(1, Math.round(image.naturalHeight * scale));
+    canvas.getContext("2d").drawImage(image, 0, 0, canvas.width, canvas.height);
+    draftLogo = canvas.toDataURL("image/png");
+    updateLogoEditor();
+  } catch {
+    if (request !== logoRequest || !businessDialog.open) return;
+    error.textContent = "This image could not be opened. Choose another logo.";
+    error.hidden = false;
+    logoInput.value = "";
+  } finally {
+    URL.revokeObjectURL(url);
+    if (request === logoRequest) byId("apply-business").disabled = false;
+  }
+});
+
+byId("remove-logo").addEventListener("click", () => {
+  resetLogoInput();
+  draftLogo = "";
+  updateLogoEditor();
+  logoInput.focus();
+});
 
 function localDate() {
   const now = new Date();
@@ -123,8 +195,9 @@ function renderInvoice() {
   setText("profile-status", showingDemo ? "Fictional example profile" : name ? profileStatus : "Add the details to show on your invoices.");
   setText("paper-business", name || "—");
   setText("paper-business-address", business.address);
+  setLogo(paperLogo, business.logo);
   setText("paper-monogram", initials);
-  byId("paper-monogram").hidden = !initials;
+  byId("paper-monogram").hidden = Boolean(business.logo) || !initials;
   setText("paper-number", invoice.number.value.trim() || "—");
   setText("paper-date", invoice.date.value.split("-").reverse().join(".") || "—");
   setText("paper-client", invoice.client.value.trim() || "—");
@@ -154,6 +227,9 @@ function startInvoice(example = false) {
 
 function openBusiness() {
   const fields = showingDemo ? emptyBusiness : business;
+  resetLogoInput();
+  draftLogo = fields.logo;
+  updateLogoEditor();
   businessKeys.forEach((key) => { businessFields[key].value = fields[key]; });
   businessFields.name.setCustomValidity("");
   businessFields.remember.checked = Boolean(savedBusiness);
@@ -167,8 +243,10 @@ byId("cancel-business").addEventListener("click", () => businessDialog.close());
 
 businessForm.addEventListener("submit", (event) => {
   event.preventDefault();
+  if (byId("apply-business").disabled) return;
   const clearExample = showingDemo && !dirty;
   business = Object.fromEntries(businessKeys.map((key) => [key, businessFields[key].value.trim()]));
+  business.logo = draftLogo;
   showingDemo = false;
   try {
     if (businessFields.remember.checked) {
@@ -227,13 +305,14 @@ document.addEventListener("input", (event) => {
   }
 });
 
-invoiceForm.addEventListener("submit", (event) => {
+invoiceForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   if (!business.name) {
     openBusiness();
     return;
   }
 
+  if (business.logo && !paperLogo.complete) await paperLogo.decode().catch(() => {});
   const title = document.title;
   document.title = "Invoice " + invoice.number.value.trim().replace(/[<>:"/\\|?*]/g, "-");
   window.addEventListener("afterprint", () => { document.title = title; }, { once: true });

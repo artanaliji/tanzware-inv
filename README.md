@@ -5,7 +5,7 @@ A static invoice editor with a live Macedonian and Albanian A4 preview. The firs
 ## Use the editor
 
 1. Open `index.html` locally or visit your published GitHub Pages URL.
-2. Select **Edit details** to enter your business details. Select **Save my details in this browser** to reuse them on future visits.
+2. Select **Edit details** to enter your business details and optionally upload a logo. Select **Save my details in this browser** to reuse your details and logo on future visits.
 3. Enter the invoice number, issue date, client, and line items. Choose the currency and set the VAT rate for the invoice, or use 0% where applicable.
 4. Select **Save PDF**, then choose **Save as PDF** in the browser print dialog. Use A4 portrait and turn off browser headers and footers if they are enabled.
 5. Select **New invoice** to clear the invoice fields and keep your business details.
