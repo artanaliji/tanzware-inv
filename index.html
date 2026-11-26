@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light">
   <title>Invoice Studio</title>
-  <link rel="stylesheet" href="./styles.css?v=6">
+  <link rel="stylesheet" href="./styles.css?v=7">
   <script src="./app.js?v=6" defer></script>
 </head>
 <body>
@@ -25,18 +25,15 @@
         <h1>Invoice editor</h1>
         <p>Fill in your details and preview the invoice before saving it as a PDF.</p>
       </div>
-      <div class="workspace-actions">
-        <a class="button secondary preview-link" href="#invoice-preview">Preview invoice</a>
-        <div class="transfer">
-          <details id="data-menu">
-            <summary class="button secondary">Invoice data <span class="chevron" aria-hidden="true"></span></summary>
-            <div class="transfer-actions">
-              <button class="button" id="export-data" type="button">Export data</button>
-              <button class="button" id="import-data" type="button">Import data</button>
-            </div>
-          </details>
-          <input id="import-file" type="file" accept=".json,application/json" hidden>
-        </div>
+      <div class="transfer">
+        <details id="data-menu">
+          <summary class="button secondary">Invoice data <span class="chevron" aria-hidden="true"></span></summary>
+          <div class="transfer-actions">
+            <button class="button" id="export-data" type="button">Export data</button>
+            <button class="button" id="import-data" type="button">Import data</button>
+          </div>
+        </details>
+        <input id="import-file" type="file" accept=".json,application/json" hidden>
       </div>
       <p class="hint" id="transfer-status" role="status"></p>
     </div>
@@ -46,7 +43,7 @@
         <section class="card business-card" aria-labelledby="business-heading">
           <div class="section-heading">
             <h2 id="business-heading">Your business</h2>
-            <button class="button secondary small" id="edit-business" type="button"><span class="edit-icon" aria-hidden="true"></span>Edit details</button>
+            <button class="button secondary small" id="edit-business" type="button" aria-label="Edit details" title="Edit details"><span class="edit-icon" aria-hidden="true"></span></button>
           </div>
           <p class="business-name" id="active-business"></p>
           <p class="hint" id="profile-status"></p>
@@ -55,8 +52,8 @@
         <section class="card" aria-labelledby="invoice-heading">
           <h2 id="invoice-heading">Invoice details</h2>
           <div class="field-grid">
-            <label>Invoice number<input name="number" required maxlength="40" placeholder="INV-001"></label>
-            <label>Issue date<input name="date" type="date" required></label>
+            <label class="invoice-reference">Invoice number<input name="number" required maxlength="40" placeholder="INV-001"></label>
+            <label class="invoice-reference">Issue date<input name="date" type="date" required></label>
             <label>Currency
               <select name="currency">
                 <option value="MKD">MKD · Denar</option>
@@ -79,8 +76,8 @@
         <section class="card" aria-labelledby="client-heading">
           <h2 id="client-heading">Bill to</h2>
           <div class="field-grid">
-            <label class="full">Client or company name<input name="client" required maxlength="100" placeholder="Client name"></label>
-            <label class="full">Client address<textarea name="clientAddress" maxlength="250" rows="2" placeholder="Street address, city and country"></textarea></label>
+            <label class="full">Client or company name<textarea name="client" rows="2" required maxlength="100" placeholder="Client name"></textarea></label>
+            <label class="full">Client address<textarea name="clientAddress" maxlength="250" rows="3" placeholder="Street address, city and country"></textarea></label>
           </div>
         </section>
 
@@ -163,8 +160,8 @@
         <button class="button icon-button" type="button" id="close-business" aria-label="Close business details">×</button>
       </div>
       <div class="field-grid">
-        <label class="full">Business name<input name="name" required maxlength="100" placeholder="Your registered business name"></label>
-        <label class="full">Business address<textarea name="address" maxlength="250" rows="2" placeholder="Street address, city and country"></textarea></label>
+        <label class="full">Business name<textarea name="name" rows="2" required maxlength="100" placeholder="Your registered business name"></textarea></label>
+        <label class="full">Business address<textarea name="address" maxlength="250" rows="3" placeholder="Street address, city and country"></textarea></label>
         <label>Bank name<input name="bank" maxlength="90"></label>
         <label>Account number<input name="account" maxlength="55"></label>
         <label>Email<input name="email" type="email" maxlength="100"></label>
