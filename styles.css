@@ -49,7 +49,10 @@ button { cursor: pointer; }
 .icon-button:disabled { opacity: .35; cursor: default; }
 
 .workspace { padding-block: 2.15rem 3rem; }
-.workspace-intro { margin-bottom: 1.4rem; }
+.workspace-toolbar { display: flex; align-items: start; justify-content: space-between; flex-wrap: wrap; gap: .85rem 1.5rem; margin-bottom: 1.4rem; }
+.transfer { max-width: 23rem; }
+.transfer-actions { display: flex; flex-wrap: wrap; gap: .55rem; }
+#transfer-status:empty { display: none; }
 .workspace-intro h1 { font-size: clamp(1.85rem, 4vw, 2.5rem); line-height: 1.12; letter-spacing: -.05em; }
 .workspace-intro p { margin-top: .55rem; color: var(--muted); }
 .workspace-grid { display: grid; align-items: start; grid-template-columns: minmax(0, 27rem) minmax(0, 1fr); gap: 1.35rem; }
@@ -147,6 +150,9 @@ dialog::backdrop { background: #142b41a6; }
 .dialog-heading h2 { font-size: 1.25rem; }
 .checkbox { display: flex; align-items: center; margin-top: 1rem; gap: .45rem; }
 .checkbox input { accent-color: var(--accent); width: 1rem; height: 1rem; margin: 0; }
+.vat-toggle { align-self: end; min-height: 2.5rem; margin-top: 0; }
+.vat-toggle input { flex-shrink: 0; }
+#vat-rate { grid-column: 2; }
 .dialog-actions { justify-content: flex-end; margin-top: 1.15rem; }
 .error { color: #9d2a26; font-size: .875rem; margin-top: .5rem; }
 .logo-preview { display: flex; align-items: center; gap: .75rem; }
@@ -171,7 +177,7 @@ dialog::backdrop { background: #142b41a6; }
 @page { size: A4 portrait; margin: 12mm 0; }
 @media print {
   :root { background: white; }
-  .app-header, .workspace-intro, #invoice-form, .preview-header, dialog { display: none !important; }
+  .app-header, .workspace-toolbar, #invoice-form, .preview-header, dialog { display: none !important; }
   .workspace, .workspace-grid, .preview, .preview-stage { display: block; width: auto; margin: 0; padding: 0; border: 0; background: transparent; }
   .paper-frame { width: 100%; break-inside: auto; }
   .paper {

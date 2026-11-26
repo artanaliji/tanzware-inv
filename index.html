@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light">
   <title>Invoice Studio</title>
-  <link rel="stylesheet" href="./styles.css?v=2">
-  <script src="./app.js?v=2" defer></script>
+  <link rel="stylesheet" href="./styles.css?v=3">
+  <script src="./app.js?v=3" defer></script>
 </head>
 <body>
   <header class="app-header">
@@ -20,9 +20,19 @@
   </header>
 
   <main class="workspace">
-    <div class="workspace-intro">
-      <h1>Invoice editor</h1>
-      <p>Fill in your details and preview the invoice before saving it as a PDF.</p>
+    <div class="workspace-toolbar">
+      <div class="workspace-intro">
+        <h1>Invoice editor</h1>
+        <p>Fill in your details and preview the invoice before saving it as a PDF.</p>
+      </div>
+      <div class="transfer">
+        <div class="transfer-actions">
+          <button class="button secondary" id="export-data" type="button">Export data</button>
+          <button class="button secondary" id="import-data" type="button">Import data</button>
+          <input id="import-file" type="file" accept=".json,application/json" hidden>
+        </div>
+        <p class="hint" id="transfer-status" role="status"></p>
+      </div>
     </div>
 
     <div class="workspace-grid">
@@ -50,7 +60,8 @@
                 <option value="ALL">ALL · Albanian lek</option>
               </select>
             </label>
-            <label>VAT (%)<input name="vat" type="number" min="0" max="100" step="0.01" required></label>
+            <label class="checkbox vat-toggle"><input type="checkbox" name="autoVat" aria-controls="vat-rate"> Calculate VAT automatically</label>
+            <label id="vat-rate" hidden>VAT (%)<input name="vat" type="number" min="0" max="100" step="0.01" required disabled></label>
           </div>
         </section>
 
