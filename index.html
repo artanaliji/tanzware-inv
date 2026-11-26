@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>Invoice Studio</title>
+  <link rel="stylesheet" href="./styles.css">
+  <script src="./app.js" defer></script>
+</head>
+<body>
+  <header class="app-header">
+    <div class="header-inner">
+      <a class="wordmark" href="./"><span class="brand-icon" aria-hidden="true"></span>Invoice Studio</a>
+      <div class="header-actions">
+        <button class="button secondary" id="new-invoice" type="button"><span aria-hidden="true">＋</span> New invoice</button>
+        <button class="button primary" id="save-pdf" type="submit" form="invoice-form">Save PDF</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="workspace">
+    <div class="workspace-intro">
+      <h1>Invoice editor</h1>
+      <p>Fill in your details and preview the invoice before saving it as a PDF.</p>
+    </div>
+
+    <div class="workspace-grid">
+      <form id="invoice-form" autocomplete="off">
+        <section class="card business-card" aria-labelledby="business-heading">
+          <div class="section-heading">
+            <h2 id="business-heading">Your business</h2>
+            <button class="button secondary small" id="edit-business" type="button">Edit details</button>
+          </div>
+          <p class="business-name" id="active-business"></p>
+          <p class="hint" id="profile-status"></p>
+        </section>
+
+        <section class="card" aria-labelledby="invoice-heading">
+          <h2 id="invoice-heading">Invoice details</h2>
+          <div class="field-grid">
+            <label>Invoice number<input name="number" required maxlength="40" placeholder="INV-001"></label>
+            <label>Issue date<input name="date" type="date" required></label>
+            <label>Currency
+              <select name="currency">
+                <option value="MKD">MKD · Denar</option>
+                <option value="EUR">EUR · Euro</option>
+                <option value="USD">USD · US dollar</option>
+                <option value="GBP">GBP · British pound</option>
+                <option value="ALL">ALL · Albanian lek</option>
+              </select>
+            </label>
+            <label>VAT (%)<input name="vat" type="number" min="0" max="100" step="0.01" required></label>
+          </div>
+        </section>
+
+        <section class="card" aria-labelledby="client-heading">
+          <h2 id="client-heading">Bill to</h2>
+          <div class="field-grid">
+            <label class="full">Client or company name<input name="client" required maxlength="100" placeholder="Client name"></label>
+            <label class="full">Client address<textarea name="clientAddress" maxlength="250" rows="2" placeholder="Street address, city and country"></textarea></label>
+          </div>
+        </section>
+
+        <section class="card items-card" aria-labelledby="items-heading">
+          <h2 id="items-heading">Line items</h2>
+          <div id="item-list"></div>
+          <button class="button secondary small" id="add-item" type="button"><span aria-hidden="true">＋</span> Add line item</button>
+          <div class="editor-total">
+            <span>Total <small id="editor-currency"></small></span>
+            <strong id="editor-total"></strong>
+          </div>
+        </section>
+      </form>
+
+      <section class="preview" aria-labelledby="preview-heading">
+        <div class="preview-header">
+          <h2 id="preview-heading"><span class="live-dot" aria-hidden="true"></span> Invoice preview</h2>
+          <span>A4 · Portrait</span>
+        </div>
+        <div class="preview-stage">
+          <div class="paper-frame">
+            <article class="paper" aria-label="Bilingual invoice">
+              <div class="paper-issuer">
+                <span class="paper-monogram" id="paper-monogram" aria-hidden="true"></span>
+                <strong id="paper-business"></strong>
+                <div class="paper-address" id="paper-business-address"></div>
+              </div>
+              <h2 class="paper-title"><span lang="mk">Фактура</span><span aria-hidden="true">/</span><span lang="sq">Faturë</span></h2>
+              <div class="paper-meta">
+                <div><strong><span lang="mk">Бр. на фактура</span>/<span lang="sq">Nr. i faturës</span></strong><span id="paper-number"></span></div>
+                <div><strong><span lang="mk">Датум</span>/<span lang="sq">Data</span></strong><span id="paper-date"></span></div>
+              </div>
+              <div class="paper-client">
+                <strong><span lang="mk">ЗА</span>/<span lang="sq">PËR</span></strong>
+                <div><strong id="paper-client"></strong><div class="paper-address" id="paper-client-address"></div></div>
+              </div>
+              <table class="paper-items" aria-label="Line items">
+                <colgroup><col class="qty-col"><col class="desc-col"><col class="price-col"><col class="price-col"></colgroup>
+                <thead><tr>
+                  <th scope="col"><span lang="mk">Количина</span><br><span lang="sq">Sasia</span></th>
+                  <th scope="col"><span lang="mk">Опис</span><br><span lang="sq">Përshkrimi</span></th>
+                  <th scope="col"><span lang="mk">Цена</span><br><span lang="sq">Çmimi</span></th>
+                  <th scope="col"><span lang="mk">Вкупно</span><br><span lang="sq">Totali</span></th>
+                </tr></thead>
+                <tbody id="paper-items"></tbody>
+              </table>
+              <div class="paper-summary">
+                <div class="paper-bank">
+                  <div id="bank-line"><strong><span lang="mk">Банка</span>/<span lang="sq">Banka</span></strong><div id="paper-bank"></div></div>
+                  <div id="account-line"><strong><span lang="mk">Сметка</span>/<span lang="sq">Llogaria</span></strong><div id="paper-account"></div></div>
+                </div>
+                <dl class="paper-totals">
+                  <div><dt><span lang="mk">Вкупно без ДДВ</span>/<span lang="sq">Totali pa TVSH</span></dt><dd id="paper-subtotal"></dd></div>
+                  <div><dt><span lang="mk">ДДВ</span>/<span lang="sq">TVSH</span> (<span id="paper-vat-rate"></span>%)</dt><dd id="paper-vat"></dd></div>
+                  <div class="paper-grand-total"><dt><span lang="mk">Вкупно</span>/<span lang="sq">Totali</span></dt><dd id="paper-total"></dd></div>
+                </dl>
+              </div>
+              <footer class="paper-footer">
+                <div class="signatures">
+                  <div><span lang="mk">Примил</span>/<span lang="sq">Pranoi</span></div>
+                  <div><span lang="mk">Овластено лице</span>/<br><span lang="sq">Personi i autorizuar</span></div>
+                </div>
+                <p id="paper-contact"></p>
+              </footer>
+            </article>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <dialog id="business-dialog" aria-labelledby="business-dialog-title">
+    <form id="business-form" autocomplete="off">
+      <div class="dialog-heading">
+        <h2 id="business-dialog-title">Your business details</h2>
+        <button class="button icon-button" type="button" id="close-business" aria-label="Close business details">×</button>
+      </div>
+      <div class="field-grid">
+        <label class="full">Business name<input name="name" required maxlength="100" placeholder="Your registered business name"></label>
+        <label class="full">Business address<textarea name="address" maxlength="250" rows="2" placeholder="Street address, city and country"></textarea></label>
+        <label>Bank name<input name="bank" maxlength="90"></label>
+        <label>Account number<input name="account" maxlength="55"></label>
+        <label>Email<input name="email" type="email" maxlength="100"></label>
+        <label>Phone<input name="phone" type="tel" maxlength="45"></label>
+      </div>
+      <label class="checkbox"><input type="checkbox" name="remember"> Save my details in this browser</label>
+      <p class="hint">Your colleagues can save their own details on their devices.</p>
+      <p id="storage-error" class="error" role="alert" hidden>Browser storage is unavailable. You can still use these details for this session.</p>
+      <div class="dialog-actions">
+        <button class="button secondary" id="cancel-business" type="button">Cancel</button>
+        <button class="button primary" type="submit">Apply details</button>
+      </div>
+    </form>
+  </dialog>
+
+  <template id="line-item-template">
+    <div class="line-item">
+      <div class="item-heading"><label>Description<textarea name="description" rows="2" required maxlength="800" placeholder="Product or service"></textarea></label>
+        <button class="button icon-button remove-item" type="button" title="Remove item">×</button>
+      </div>
+      <div class="item-amounts">
+        <label>Quantity<input name="quantity" type="number" min="0.001" max="99999999" step="0.001" required></label>
+        <label>Unit price<input name="price" type="number" min="0" max="99999999" step="0.01" required></label>
+        <div class="line-total"><span>Amount</span><output></output></div>
+      </div>
+    </div>
+  </template>
+</body>
+</html>
