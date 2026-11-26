@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light">
   <title>Invoice Studio</title>
-  <link rel="stylesheet" href="./styles.css?v=5">
-  <script src="./app.js?v=5" defer></script>
+  <link rel="stylesheet" href="./styles.css?v=6">
+  <script src="./app.js?v=6" defer></script>
 </head>
 <body>
   <header class="app-header">
@@ -25,14 +25,20 @@
         <h1>Invoice editor</h1>
         <p>Fill in your details and preview the invoice before saving it as a PDF.</p>
       </div>
-      <div class="transfer">
-        <div class="transfer-actions">
-          <button class="button secondary" id="export-data" type="button">Export data</button>
-          <button class="button secondary" id="import-data" type="button">Import data</button>
+      <div class="workspace-actions">
+        <a class="button secondary preview-link" href="#invoice-preview">Preview invoice</a>
+        <div class="transfer">
+          <details id="data-menu">
+            <summary class="button secondary">Invoice data <span class="chevron" aria-hidden="true"></span></summary>
+            <div class="transfer-actions">
+              <button class="button" id="export-data" type="button">Export data</button>
+              <button class="button" id="import-data" type="button">Import data</button>
+            </div>
+          </details>
           <input id="import-file" type="file" accept=".json,application/json" hidden>
         </div>
-        <p class="hint" id="transfer-status" role="status"></p>
       </div>
+      <p class="hint" id="transfer-status" role="status"></p>
     </div>
 
     <div class="workspace-grid">
@@ -40,7 +46,7 @@
         <section class="card business-card" aria-labelledby="business-heading">
           <div class="section-heading">
             <h2 id="business-heading">Your business</h2>
-            <button class="button secondary small" id="edit-business" type="button">Edit details</button>
+            <button class="button secondary small" id="edit-business" type="button"><span class="edit-icon" aria-hidden="true"></span>Edit details</button>
           </div>
           <p class="business-name" id="active-business"></p>
           <p class="hint" id="profile-status"></p>
@@ -60,8 +66,13 @@
                 <option value="ALL">ALL · Albanian lek</option>
               </select>
             </label>
-            <label class="checkbox vat-toggle"><input type="checkbox" name="autoVat" aria-controls="vat-rate"> Calculate VAT automatically</label>
-            <label id="vat-rate" hidden>VAT (%)<input name="vat" type="number" min="0" max="100" step="0.01" required disabled></label>
+            <label class="checkbox vat-toggle"><input type="checkbox" name="autoVat"> Calculate VAT automatically</label>
+            <label>VAT rate (%)<input name="vat" type="number" inputmode="decimal" min="0" max="100" step="0.01" required></label>
+            <label id="manual-vat-field">VAT amount<input name="manualVat" type="number" inputmode="decimal" min="0" max="99999999" step="0.01" required></label>
+            <div class="calculated-field" id="calculated-vat-field" hidden>
+              <span id="calculated-vat-label">VAT amount</span>
+              <output id="calculated-vat" aria-labelledby="calculated-vat-label"></output>
+            </div>
           </div>
         </section>
 
@@ -84,7 +95,7 @@
         </section>
       </form>
 
-      <section class="preview" aria-labelledby="preview-heading">
+      <section class="preview" id="invoice-preview" aria-labelledby="preview-heading">
         <div class="preview-header">
           <h2 id="preview-heading"><span class="live-dot" aria-hidden="true"></span> Invoice preview</h2>
           <div class="preview-actions">
@@ -195,12 +206,12 @@
 
   <template id="line-item-template">
     <div class="line-item">
-      <div class="item-heading"><label>Description<textarea name="description" rows="2" required maxlength="800" placeholder="Product or service"></textarea></label>
+      <div class="item-heading"><label><span>Description</span><textarea name="description" rows="3" required maxlength="800" placeholder="Describe the product or service"></textarea></label>
         <button class="button icon-button remove-item" type="button" title="Remove item">×</button>
       </div>
       <div class="item-amounts">
-        <label>Quantity<input name="quantity" type="number" min="0.001" max="99999999" step="0.001" required></label>
-        <label>Unit price<input name="price" type="number" min="0" max="99999999" step="0.01" required></label>
+        <label>Quantity<input name="quantity" type="number" inputmode="decimal" min="0.001" max="99999999" step="0.001" required></label>
+        <label>Unit price<input name="price" type="number" inputmode="decimal" min="0" max="99999999" step="0.01" required></label>
         <div class="line-total"><span>Amount</span><output></output></div>
       </div>
     </div>

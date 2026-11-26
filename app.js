@@ -269,9 +269,10 @@ function renderInvoice() {
     .map((word) => Array.from(word)[0]).join("").toLocaleUpperCase();
   const currency = invoice.currency.value;
   const calculateVat = invoice.autoVat.checked;
-  byId("vat-rate").hidden = !calculateVat;
-  invoice.vat.disabled = !calculateVat;
-  const vatRate = calculateVat ? scaledValue(invoice.vat, 100) : 0n;
+  byId("manual-vat-field").hidden = calculateVat;
+  byId("calculated-vat-field").hidden = !calculateVat;
+  invoice.manualVat.disabled = calculateVat;
+  const vatRate = scaledValue(invoice.vat, 100);
   const rows = document.createDocumentFragment();
   let subtotal = 0n;
 
@@ -289,14 +290,16 @@ function renderInvoice() {
     rows.append(row);
   }
 
-  const vat = (subtotal * vatRate + 5000n) / 10000n;
+  const vat = calculateVat ? (subtotal * vatRate + 5000n) / 10000n : scaledValue(invoice.manualVat, 100);
+  const formattedVat = money(vat, currency, currency);
   const total = money(subtotal + vat, currency);
   byId("paper-items").replaceChildren(rows);
   setText("editor-total", total);
   setText("editor-currency", currency);
-  renderLabels(String(calculateVat ? Number(vatRate) / 100 : defaultVatRate));
+  renderLabels(String(Number(vatRate) / 100));
   setText("paper-subtotal", money(subtotal, currency));
-  setText("paper-vat", money(vat, currency, currency));
+  setText("paper-vat", formattedVat);
+  setText("calculated-vat", formattedVat);
   setText("paper-total", total);
 
   setText("active-business", name || "Add your business");
@@ -327,6 +330,7 @@ function startInvoice(example = false) {
   invoice.currency.value = "MKD";
   invoice.autoVat.checked = false;
   invoice.vat.value = String(defaultVatRate);
+  invoice.manualVat.value = "0";
   invoice.client.value = example ? "Juniper Works" : "";
   invoice.clientAddress.value = example ? "48 Sample Avenue\n1200 Tetovo, North Macedonia" : "";
   items.replaceChildren();
@@ -365,13 +369,37 @@ function invoiceFilename() {
   return invoice.number.value.trim().replace(/[<>:"/\\|?*]/g, "-") || "draft";
 }
 
+const dataMenu = byId("data-menu");
+const dataMenuSummary = dataMenu.querySelector("summary");
+
+function closeDataMenu() {
+  dataMenu.open = false;
+  dataMenuSummary.focus();
+}
+
+document.addEventListener("click", (event) => {
+  if (dataMenu.open && !dataMenu.contains(event.target)) dataMenu.open = false;
+});
+
+dataMenu.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && dataMenu.open) {
+    event.preventDefault();
+    closeDataMenu();
+  }
+});
+
 byId("export-data").addEventListener("click", () => {
+  closeDataMenu();
   const data = {
     format: transferFormat,
     version: 1,
     business,
     labels: customLabels,
-    invoice: { ...fieldValues(invoice, invoiceKeys), autoVat: invoice.autoVat.checked },
+    invoice: {
+      ...fieldValues(invoice, invoiceKeys),
+      autoVat: invoice.autoVat.checked,
+      manualVat: invoice.manualVat.value,
+    },
     items: Array.from(items.children, (item) => Object.fromEntries(
       itemKeys.map((key) => [key, item.querySelector('[name="' + key + '"]').value]),
     )),
@@ -393,7 +421,10 @@ byId("export-data").addEventListener("click", () => {
 });
 
 const importInput = byId("import-file");
-byId("import-data").addEventListener("click", () => importInput.click());
+byId("import-data").addEventListener("click", () => {
+  closeDataMenu();
+  importInput.click();
+});
 importInput.addEventListener("change", async () => {
   const file = importInput.files[0];
   importInput.value = "";
@@ -407,6 +438,7 @@ importInput.addEventListener("change", async () => {
         !importedLabels ||
         !matchesFields(data.business, businessKeys) || !supportedLogo(data.business.logo) ||
         !matchesFields(data.invoice, invoiceKeys) || typeof data.invoice.autoVat !== "boolean" ||
+        (data.invoice.manualVat !== undefined && typeof data.invoice.manualVat !== "string") ||
         !Object.hasOwn(currencyUnits, data.invoice.currency) ||
         !Array.isArray(data.items) || !data.items.length || !data.items.every((item) => matchesFields(item, itemKeys))) {
       throw new Error("Choose a JSON file exported from Invoice Studio.");
@@ -426,6 +458,7 @@ importInput.addEventListener("change", async () => {
       validateRequiredText(invoice[key]);
     });
     invoice.autoVat.checked = data.invoice.autoVat;
+    invoice.manualVat.value = data.invoice.manualVat ?? "0";
     items.replaceChildren();
     data.items.forEach((item) => addItem(Object.fromEntries(itemKeys.map((key) => [key, item[key]]))));
     updateItemButtons();
