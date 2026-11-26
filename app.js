@@ -411,6 +411,17 @@ function invoiceFilename() {
   return invoice.number.value.trim().replace(/[<>:"/\\|?*]/g, "-") || "draft";
 }
 
+function downloadFile(file, filename) {
+  const url = URL.createObjectURL(file);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  document.body.append(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 30000);
+}
+
 const dataMenu = byId("data-menu");
 const dataMenuSummary = dataMenu.querySelector("summary");
 
@@ -490,14 +501,7 @@ byId("export-data").addEventListener("click", () => {
     transferStatus("This invoice is too large to export.", true);
     return;
   }
-  const url = URL.createObjectURL(file);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = "invoice-" + invoiceFilename() + ".json";
-  document.body.append(link);
-  link.click();
-  link.remove();
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  downloadFile(file, "invoice-" + invoiceFilename() + ".json");
   transferStatus("Invoice data exported.");
 });
 
@@ -715,6 +719,21 @@ document.addEventListener("input", (event) => {
   }
 });
 
+function pdfData() {
+  const fields = ["business", "business-address", "number", "date", "client", "client-address",
+    "bank", "account", "subtotal", "vat", "total", "contact"];
+  const values = Object.fromEntries(fields.map((key) => [key, byId("paper-" + key).textContent]));
+  return {
+    ...values,
+    address: values["business-address"],
+    clientAddress: values["client-address"],
+    labels: Object.fromEntries(labelSlots.map(({ key, element }) => [key, element.innerText])),
+    rows: Array.from(byId("paper-items").rows, (row) => Array.from(row.cells, (cell) => cell.textContent)),
+    logo: business.logo ? paperLogo.src : "",
+    initials: byId("paper-monogram").textContent,
+  };
+}
+
 invoiceForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   if (!business.name) {
@@ -722,11 +741,25 @@ invoiceForm.addEventListener("submit", async (event) => {
     return;
   }
 
-  if (business.logo && !paperLogo.complete) await paperLogo.decode().catch(() => {});
-  const title = document.title;
-  document.title = "Invoice " + invoiceFilename();
-  window.addEventListener("afterprint", () => { document.title = title; }, { once: true });
-  window.print();
+  const button = byId("save-pdf");
+  if (button.disabled) return;
+  const data = pdfData();
+  const filename = "Invoice " + invoiceFilename() + ".pdf";
+  button.disabled = true;
+  button.textContent = "Saving…";
+  transferStatus("");
+  try {
+    const { createInvoicePdf } = await import("./pdf-export.mjs?v=10");
+    downloadFile(await createInvoicePdf(data), filename);
+  } catch {
+    const message = location.protocol === "file:"
+      ? "Open the published site or use a local HTTP server to save a PDF."
+      : "Could not save the invoice PDF. Try again.";
+    transferStatus(message, true);
+  } finally {
+    button.textContent = "Save PDF";
+    button.disabled = false;
+  }
 });
 
 startInvoice(showingDemo);

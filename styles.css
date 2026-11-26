@@ -1,3 +1,26 @@
+@font-face {
+  font-family: "Invoice Open Sans";
+  src: url("./assets/fonts/OpenSans-Regular.ttf") format("truetype");
+  font-display: swap;
+}
+@font-face {
+  font-family: "Invoice Open Sans";
+  src: url("./assets/fonts/OpenSans-Bold.ttf") format("truetype");
+  font-weight: 700;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Invoice Open Sans";
+  src: url("./assets/fonts/OpenSans-Italic.ttf") format("truetype");
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Invoice Montserrat";
+  src: url("./assets/fonts/Montserrat-Medium.ttf") format("truetype");
+  font-display: swap;
+}
+
 :root {
   font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
   color: #162736;
@@ -124,6 +147,7 @@ select {
 .paper {
   background: #fff; color: #151515; min-height: 141.43cqw; padding: 5.4cqw 9.2cqw 6.5cqw;
   box-shadow: 0 2px 8px #20364a14, 0 17px 32px -20px #20364a40;
+  font-family: "Invoice Open Sans", system-ui, sans-serif;
   display: flex; flex-direction: column; font-size: 1.91cqw; line-height: 1.34;
   overflow-wrap: anywhere; font-variant-numeric: tabular-nums;
 }
@@ -138,7 +162,7 @@ select {
 }
 .paper-address { font-size: .87em; font-style: italic; white-space: pre-line; }
 #paper-business, #paper-client { white-space: pre-line; }
-.paper-title { font-size: 8.15cqw; font-weight: 450; letter-spacing: -.025em; line-height: 1.14; margin: 4.9cqw 0 4.3cqw; }
+.paper-title { font-family: "Invoice Montserrat", "Invoice Open Sans", sans-serif; font-size: 7.9cqw; font-weight: 400; line-height: 1.14; margin: 4.9cqw 0 4.3cqw; }
 [data-invoice-label] { display: block; min-height: 1lh; white-space: pre-line; }
 .paper-meta { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); gap: 3cqw; }
 .paper-meta > div:first-child > span { display: block; margin-top: .3cqw; }
