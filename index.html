@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light">
   <title>Invoice Studio</title>
-  <link rel="stylesheet" href="./styles.css?v=7">
-  <script src="./app.js?v=8" defer></script>
+  <link rel="stylesheet" href="./styles.css?v=9">
+  <script src="./app.js?v=9" defer></script>
 </head>
 <body>
   <header class="app-header">
@@ -25,15 +25,18 @@
         <h1>Invoice editor</h1>
         <p>Fill in your details and preview the invoice before saving it as a PDF.</p>
       </div>
-      <div class="transfer">
-        <details id="data-menu">
-          <summary class="button secondary">Invoice data <span class="chevron" aria-hidden="true"></span></summary>
-          <div class="transfer-actions">
-            <button class="button" id="export-data" type="button">Export data</button>
-            <button class="button" id="import-data" type="button">Import data</button>
-          </div>
-        </details>
-        <input id="import-file" type="file" accept=".json,application/json" hidden>
+      <div class="workspace-actions">
+        <button class="button secondary" id="open-templates" type="button">Templates</button>
+        <div class="transfer">
+          <details id="data-menu">
+            <summary class="button secondary">Invoice data <span class="chevron" aria-hidden="true"></span></summary>
+            <div class="transfer-actions">
+              <button class="button" id="export-data" type="button">Export data</button>
+              <button class="button" id="import-data" type="button">Import data</button>
+            </div>
+          </details>
+          <input id="import-file" type="file" accept=".json,application/json" hidden>
+        </div>
       </div>
       <p class="hint" id="transfer-status" role="status"></p>
     </div>
@@ -199,6 +202,21 @@
         <button class="button primary" type="submit">Apply labels</button>
       </div>
     </form>
+  </dialog>
+
+  <dialog id="templates-dialog" aria-labelledby="templates-title">
+    <div class="dialog-heading">
+      <h2 id="templates-title">Invoice templates</h2>
+      <button class="button icon-button" type="button" id="close-templates" aria-label="Close templates">×</button>
+    </div>
+    <p class="hint">Save the current invoice for reuse in this browser. Loading a template uses today's date and clears the invoice number.</p>
+    <form id="template-form" autocomplete="off">
+      <label>Template name<input name="templateName" maxlength="80" required placeholder="For example, monthly consulting"></label>
+      <button class="button primary" type="submit">Save template</button>
+    </form>
+    <p class="hint" id="templates-empty">No templates saved yet.</p>
+    <ul class="template-list" id="template-list" aria-label="Saved invoice templates"></ul>
+    <p class="hint" id="template-status" role="status" hidden></p>
   </dialog>
 
   <template id="line-item-template">

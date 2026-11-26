@@ -58,6 +58,7 @@ button { cursor: pointer; }
 
 .workspace { padding-block: 2.15rem 3rem; }
 .workspace-toolbar { display: flex; align-items: start; justify-content: space-between; flex-wrap: wrap; gap: .85rem 1.5rem; margin-bottom: 1.4rem; }
+.workspace-actions { display: flex; align-items: start; gap: .5rem; }
 .transfer { position: relative; }
 #data-menu > summary { cursor: pointer; list-style: none; gap: .55rem; }
 #data-menu > summary::-webkit-details-marker { display: none; }
@@ -185,6 +186,14 @@ dialog::backdrop { background: #142b41a6; }
 #labels-dialog { width: min(calc(100% - 1.5rem), 39rem); }
 #labels-form { display: flex; flex-direction: column; max-height: calc(100dvh - 4.25rem); }
 #label-fields { min-height: 0; overflow: auto; padding: .25rem .3rem; }
+#template-form { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: .6rem; align-items: end; margin-block: 1rem; }
+.template-list { padding: 0; margin: 0; list-style: none; }
+.template-list > li {
+  display: flex; gap: .6rem; align-items: center; justify-content: space-between;
+  padding-block: .6rem; border-top: 1px solid var(--line);
+}
+.template-list > li > span { font-weight: 650; overflow-wrap: anywhere; }
+.template-actions { display: flex; flex: none; gap: .4rem; }
 .error { color: #9d2a26; font-size: .875rem; margin-top: .5rem; }
 .logo-preview { display: flex; align-items: center; gap: .75rem; }
 .logo-preview img { width: 5rem; height: 2.5rem; object-fit: contain; object-position: left center; }
@@ -217,6 +226,7 @@ dialog::backdrop { background: #142b41a6; }
   .preview-actions > span { display: none; }
   #label-fields { grid-template-columns: minmax(0, 1fr); }
   #labels-dialog { padding: .8rem; }
+  #template-form { grid-template-columns: minmax(0, 1fr); }
   .workspace-toolbar .button { padding-inline: .75rem; }
   .invoice-reference { grid-column: 1 / -1; }
   .item-amounts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -229,30 +239,24 @@ dialog::backdrop { background: #142b41a6; }
     .item-heading textarea { min-height: 7rem; }
   }
 }
-@page { size: A4 portrait; margin: 12mm 0; }
+@page { size: A4 portrait; margin: 9mm 0; }
 @media print {
   :root { background: white; }
   .app-header, .workspace-toolbar, #invoice-form, .preview-header, dialog { display: none !important; }
   .workspace, .workspace-grid, .preview, .preview-stage { display: block; width: auto; margin: 0; padding: 0; border: 0; background: transparent; }
   .paper-frame { width: 100%; break-inside: auto; }
   .paper {
-    display: block; min-height: 0; padding: 0 9.2cqw;
-    box-shadow: none; print-color-adjust: exact; -webkit-print-color-adjust: exact;
+    display: block; min-height: 0; padding: 0 7cqw;
+    font-size: 1.8cqw; box-shadow: none; print-color-adjust: exact; -webkit-print-color-adjust: exact;
   }
-  .paper-issuer { margin-left: auto; min-height: 20cqw; }
+  .paper-issuer { margin-left: auto; min-height: 15cqw; }
+  .paper-title { margin-block: 2.6cqw; }
+  .qty-col { width: 14%; }
+  .desc-col { width: 44%; }
+  .price-col { width: 21%; }
   .paper-meta, .paper-client, .paper-summary, .paper-footer, .paper-items tr { break-inside: avoid; }
   .paper-items thead { display: table-header-group; }
-  .paper-footer { padding-top: 10cqw; }
+  .paper-items td { padding-block: .8cqw; }
+  .paper-footer { padding-top: 4cqw; }
   .paper-summary { break-after: avoid; }
-
-  .paper:has(.paper-items tbody tr:nth-child(4)) {
-    font-size: 1.8cqw;
-    .paper-issuer { min-height: 15cqw; }
-    .paper-title { margin-block: 2.6cqw; }
-    .qty-col { width: 14%; }
-    .desc-col { width: 44%; }
-    .price-col { width: 21%; }
-    .paper-items td { padding-block: .8cqw; }
-    .paper-footer { padding-top: 4cqw; }
-  }
 }

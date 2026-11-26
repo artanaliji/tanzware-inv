@@ -11,6 +11,7 @@ const paperLogo = byId("paper-logo");
 const items = byId("item-list");
 const profileKey = "invoice-studio.business.v1";
 const labelsKey = "invoice-studio.labels.v1";
+const templatesKey = "invoice-studio.templates.v1";
 const labelLimit = 100;
 const labelsDialog = byId("labels-dialog");
 const labelsForm = byId("labels-form");
@@ -429,9 +430,8 @@ dataMenu.addEventListener("keydown", (event) => {
   }
 });
 
-byId("export-data").addEventListener("click", () => {
-  closeDataMenu();
-  const data = {
+function captureInvoiceData() {
+  return {
     format: transferFormat,
     version: 1,
     business,
@@ -445,7 +445,47 @@ byId("export-data").addEventListener("click", () => {
       itemKeys.map((key) => [key, item.querySelector('[name="' + key + '"]').value]),
     )),
   };
-  const file = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+}
+
+function validateInvoiceData(data) {
+  const labels = data?.labels === undefined ? {} : normalizeLabels(data.labels);
+  if (data?.format !== transferFormat || data.version !== 1 ||
+      !labels ||
+      !matchesFields(data.business, businessKeys) || !supportedLogo(data.business.logo) ||
+      !matchesFields(data.invoice, invoiceKeys) || typeof data.invoice.autoVat !== "boolean" ||
+      (data.invoice.manualVat !== undefined && typeof data.invoice.manualVat !== "string") ||
+      !Object.hasOwn(currencyUnits, data.invoice.currency) ||
+      !Array.isArray(data.items) || !data.items.length || !data.items.every((item) => matchesFields(item, itemKeys))) {
+    return null;
+  }
+  return { ...data, labels };
+}
+
+function applyInvoiceData(data, fromTemplate = false) {
+  business = Object.fromEntries([...businessKeys, "logo"].map((key) => [key, data.business[key]]));
+  customLabels = data.labels;
+  showingDemo = false;
+  invoiceKeys.forEach((key) => {
+    invoice[key].value = data.invoice[key];
+    validateRequiredText(invoice[key]);
+  });
+  if (fromTemplate) {
+    invoice.number.value = "";
+    invoice.number.setCustomValidity("");
+    invoice.date.value = localDate();
+  }
+  invoice.autoVat.checked = data.invoice.autoVat;
+  invoice.manualVat.value = data.invoice.manualVat ?? "0";
+  items.replaceChildren();
+  data.items.forEach((item) => addItem(Object.fromEntries(itemKeys.map((key) => [key, item[key]]))));
+  updateItemButtons();
+  dirty = !fromTemplate;
+  renderInvoice();
+}
+
+byId("export-data").addEventListener("click", () => {
+  closeDataMenu();
+  const file = new Blob([JSON.stringify(captureInvoiceData(), null, 2)], { type: "application/json" });
   if (file.size > transferLimit) {
     transferStatus("This invoice is too large to export.", true);
     return;
@@ -473,17 +513,8 @@ importInput.addEventListener("change", async () => {
   byId("import-data").disabled = true;
   try {
     if (file.size > transferLimit) throw new Error("This file is too large to import.");
-    const data = JSON.parse(await file.text());
-    const importedLabels = data?.labels === undefined ? {} : normalizeLabels(data.labels);
-    if (data?.format !== transferFormat || data.version !== 1 ||
-        !importedLabels ||
-        !matchesFields(data.business, businessKeys) || !supportedLogo(data.business.logo) ||
-        !matchesFields(data.invoice, invoiceKeys) || typeof data.invoice.autoVat !== "boolean" ||
-        (data.invoice.manualVat !== undefined && typeof data.invoice.manualVat !== "string") ||
-        !Object.hasOwn(currencyUnits, data.invoice.currency) ||
-        !Array.isArray(data.items) || !data.items.length || !data.items.every((item) => matchesFields(item, itemKeys))) {
-      throw new Error("Choose a JSON file exported from Invoice Studio.");
-    }
+    const data = validateInvoiceData(JSON.parse(await file.text()));
+    if (!data) throw new Error("Choose a JSON file exported from Invoice Studio.");
     if (data.business.logo) {
       const image = new Image();
       image.src = data.business.logo;
@@ -491,25 +522,124 @@ importInput.addEventListener("change", async () => {
     }
     if (dirty && !window.confirm("Replace the current invoice with the imported invoice?")) return;
 
-    business = Object.fromEntries([...businessKeys, "logo"].map((key) => [key, data.business[key]]));
-    customLabels = importedLabels;
-    showingDemo = false;
-    invoiceKeys.forEach((key) => {
-      invoice[key].value = data.invoice[key];
-      validateRequiredText(invoice[key]);
-    });
-    invoice.autoVat.checked = data.invoice.autoVat;
-    invoice.manualVat.value = data.invoice.manualVat ?? "0";
-    items.replaceChildren();
-    data.items.forEach((item) => addItem(Object.fromEntries(itemKeys.map((key) => [key, item[key]]))));
-    updateItemButtons();
-    dirty = true;
-    renderInvoice();
+    applyInvoiceData(data);
     transferStatus("Invoice data imported.");
   } catch (error) {
     transferStatus(error instanceof SyntaxError ? "Choose a JSON file exported from Invoice Studio." : error.message, true);
   } finally {
     byId("import-data").disabled = false;
+  }
+});
+
+const templatesDialog = byId("templates-dialog");
+const templateForm = byId("template-form");
+const templateName = templateForm.elements.templateName;
+const templateList = byId("template-list");
+
+function readTemplates() {
+  const stored = JSON.parse(localStorage.getItem(templatesKey) ?? "[]");
+  if (!Array.isArray(stored)) throw new Error("Invalid templates");
+  return stored;
+}
+
+function templateStatus(message, error = false) {
+  const status = byId("template-status");
+  status.textContent = message;
+  status.classList.toggle("error", error);
+  status.hidden = !message;
+}
+
+function templateButton(text, name, action) {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = "button secondary small";
+  button.textContent = text;
+  button.setAttribute("aria-label", text + " template " + name);
+  button.addEventListener("click", action);
+  return button;
+}
+
+function showTemplates() {
+  try {
+    const entries = readTemplates();
+    templateList.replaceChildren(...entries.map(({ name, data }) => {
+      const row = document.createElement("li");
+      const title = document.createElement("span");
+      title.textContent = name;
+      const actions = document.createElement("div");
+      actions.className = "template-actions";
+      actions.append(
+        templateButton("Use", name, () => useTemplate(name, data)),
+        templateButton("Delete", name, () => deleteTemplate(name)),
+      );
+      row.append(title, actions);
+      return row;
+    }));
+    byId("templates-empty").hidden = entries.length > 0;
+  } catch {
+    templateList.replaceChildren();
+    byId("templates-empty").hidden = true;
+    templateStatus("Saved templates could not be read in this browser.", true);
+  }
+}
+
+function useTemplate(name, data) {
+  const values = validateInvoiceData(data);
+  if (!values) {
+    templateStatus("This template could not be opened.", true);
+    return;
+  }
+  if (dirty && !window.confirm("Replace the current invoice with this template?")) return;
+  applyInvoiceData(values, true);
+  templatesDialog.close();
+  invoice.number.focus();
+  transferStatus("Loaded template “" + name + "”.");
+}
+
+function deleteTemplate(name) {
+  if (!window.confirm("Delete the template “" + name + "”?")) return;
+  try {
+    const entries = readTemplates().filter((entry) => entry.name !== name);
+    localStorage.setItem(templatesKey, JSON.stringify(entries));
+    templateStatus("Template deleted.");
+    showTemplates();
+    templateName.focus();
+  } catch {
+    templateStatus("This template could not be deleted.", true);
+  }
+}
+
+byId("open-templates").addEventListener("click", () => {
+  templateName.value = showingDemo ? "" : invoice.client.value.split("\n", 1)[0].trim().slice(0, 80);
+  templateStatus("");
+  showTemplates();
+  templatesDialog.showModal();
+});
+
+byId("close-templates").addEventListener("click", () => templatesDialog.close());
+
+templateForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+  const name = templateName.value.trim();
+  if (!name) {
+    templateStatus("Enter a name for the template.", true);
+    templateName.focus();
+    return;
+  }
+  try {
+    const entries = readTemplates();
+    const existing = entries.findIndex((entry) => entry.name.toLowerCase() === name.toLowerCase());
+    if (existing >= 0 && !window.confirm("Replace the saved template “" + entries[existing].name + "”?")) return;
+    const data = captureInvoiceData();
+    data.invoice.number = "";
+    data.invoice.date = "";
+    if (existing >= 0) entries[existing] = { name, data };
+    else entries.push({ name, data });
+    localStorage.setItem(templatesKey, JSON.stringify(entries));
+    templateStatus("Template saved.");
+    showTemplates();
+  } catch {
+    templateStatus("This template could not be saved in this browser. You can still export the invoice as JSON.", true);
   }
 });
 

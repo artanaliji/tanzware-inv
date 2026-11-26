@@ -10,7 +10,9 @@ A static invoice editor with a live Macedonian and Albanian A4 preview. The firs
 4. Select **Save PDF**, then choose **Save as PDF** in the browser print dialog. Use A4 portrait and turn off browser headers and footers if they are enabled.
 5. Select **New invoice** to clear the invoice fields and keep your business details.
 
-Each browser profile keeps its own business details. On a shared browser profile, clear the **Save my details in this browser** checkbox and apply the change to remove the stored details. Client information and line items exist only on the open page.
+Each browser profile keeps its own business details. On a shared browser profile, clear the **Save my details in this browser** checkbox and apply the change to remove the stored details. Unsaved invoice entries stay on the open page.
+
+For recurring invoices, open **Templates**, name the current invoice, and select **Save template**. A saved template keeps your business and client details, logo, line items, VAT, and labels in this browser. Select **Use** next month to start with those details, today's date, and an empty invoice number.
 
 Select **Edit labels** in the preview to change the text printed on the invoice. Leave a label blank to hide its text while keeping its space. Long labels wrap within their columns. Use `{rate}` in the VAT label to insert the percentage number, and select **Save labels in this browser** to keep your changes for future visits.
 
