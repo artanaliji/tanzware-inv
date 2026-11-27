@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light">
   <title>Invoice Studio</title>
-  <link rel="stylesheet" href="./styles.css?v=10">
-  <script src="./app.js?v=10" defer></script>
+  <link rel="stylesheet" href="./styles.css?v=11">
+  <script src="./app.js?v=11" defer></script>
 </head>
 <body>
   <header class="app-header">
@@ -217,6 +217,20 @@
     <p class="hint" id="templates-empty">No templates saved yet.</p>
     <ul class="template-list" id="template-list" aria-label="Saved invoice templates"></ul>
     <p class="hint" id="template-status" role="status" hidden></p>
+  </dialog>
+
+  <dialog id="save-pdf-dialog" aria-labelledby="save-pdf-title" aria-describedby="save-pdf-help">
+    <div class="dialog-heading">
+      <h2 id="save-pdf-title">Save invoice PDF</h2>
+      <form method="dialog">
+        <button class="button icon-button" type="submit" aria-label="Close save options">×</button>
+      </form>
+    </div>
+    <p class="hint" id="save-pdf-help">Choose Save to Files in the share sheet.</p>
+    <div class="dialog-actions">
+      <button class="button primary" id="share-pdf" type="button">Save to Files</button>
+      <a class="button primary" id="download-pdf-link" hidden>Download PDF</a>
+    </div>
   </dialog>
 
   <template id="line-item-template">

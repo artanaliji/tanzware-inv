@@ -734,6 +734,63 @@ function pdfData() {
   };
 }
 
+const pdfSaveDialog = byId("save-pdf-dialog");
+const pdfShareButton = byId("share-pdf");
+const pdfDownloadLink = byId("download-pdf-link");
+let pendingPdf = null;
+let pdfDownloadUrl = "";
+
+function usesAppleMobileSave() {
+  return /iPhone|iPad|iPod/.test(navigator.userAgent) ||
+    (/Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints > 1);
+}
+
+function offerPdfDownload(file) {
+  pdfDownloadUrl = URL.createObjectURL(file);
+  pdfDownloadLink.href = pdfDownloadUrl;
+  pdfDownloadLink.download = file.name;
+  pdfShareButton.hidden = true;
+  pdfDownloadLink.hidden = false;
+  setText("save-pdf-help", "Touch and hold Download PDF, then choose Download Linked File.");
+}
+
+function offerMobileSave(blob, filename) {
+  pendingPdf = new File([blob], filename, { type: "application/pdf" });
+  pdfShareButton.hidden = false;
+  pdfShareButton.disabled = false;
+  pdfDownloadLink.hidden = true;
+  setText("save-pdf-help", "Choose Save to Files in the share sheet.");
+  if (!navigator.share || !navigator.canShare?.({ files: [pendingPdf] })) {
+    offerPdfDownload(pendingPdf);
+  }
+  pdfSaveDialog.showModal();
+  (pdfShareButton.hidden ? pdfDownloadLink : pdfShareButton).focus();
+}
+
+pdfShareButton.addEventListener("click", async () => {
+  const file = pendingPdf;
+  if (!file) return;
+  pdfShareButton.disabled = true;
+  try {
+    await navigator.share({ files: [file] });
+    if (file === pendingPdf) pdfSaveDialog.close();
+  } catch (error) {
+    if (file === pendingPdf && error.name !== "AbortError") {
+      offerPdfDownload(file);
+      pdfDownloadLink.focus();
+    }
+  } finally {
+    if (file === pendingPdf) pdfShareButton.disabled = false;
+  }
+});
+
+pdfSaveDialog.addEventListener("close", () => {
+  pendingPdf = null;
+  if (pdfDownloadUrl) URL.revokeObjectURL(pdfDownloadUrl);
+  pdfDownloadUrl = "";
+  pdfDownloadLink.removeAttribute("href");
+});
+
 invoiceForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   if (!business.name) {
@@ -750,7 +807,9 @@ invoiceForm.addEventListener("submit", async (event) => {
   transferStatus("");
   try {
     const { createInvoicePdf } = await import("./pdf-export.mjs?v=10");
-    downloadFile(await createInvoicePdf(data), filename);
+    const file = await createInvoicePdf(data);
+    if (usesAppleMobileSave()) offerMobileSave(file, filename);
+    else downloadFile(file, filename);
   } catch {
     const message = location.protocol === "file:"
       ? "Open the published site or use a local HTTP server to save a PDF."

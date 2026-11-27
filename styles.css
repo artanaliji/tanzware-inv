@@ -207,6 +207,7 @@ dialog::backdrop { background: #142b41a6; }
 .vat-toggle { align-self: end; min-height: 2.5rem; margin-top: 0; }
 .vat-toggle input { flex-shrink: 0; }
 .dialog-actions { justify-content: flex-end; margin-top: 1.15rem; }
+.dialog-actions a.button { text-decoration: none; }
 #labels-dialog { width: min(calc(100% - 1.5rem), 39rem); }
 #labels-form { display: flex; flex-direction: column; max-height: calc(100dvh - 4.25rem); }
 #label-fields { min-height: 0; overflow: auto; padding: .25rem .3rem; }
